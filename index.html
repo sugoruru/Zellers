@@ -67,6 +67,53 @@
         margin-bottom: 1rem;
         display: none;
       }
+      .feedback {
+        margin: 1.2rem 0 0.5rem 0;
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #6366f1;
+        text-align: center;
+        min-height: 2.2em;
+        transition: opacity 0.2s;
+      }
+      #resultScreen {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        background: #fff;
+        border-radius: 1.2rem;
+        box-shadow: 0 4px 24px #a5b4fc44;
+        padding: 2.5rem 2rem;
+        margin-top: 2rem;
+        min-width: 320px;
+        max-width: 90vw;
+      }
+      #resultScreen h2 {
+        color: #6366f1;
+        font-size: 2rem;
+        margin-bottom: 1.2rem;
+      }
+      #resultScreen p {
+        font-size: 1.2rem;
+        margin: 0.5rem 0;
+      }
+      #restartButton {
+        margin-top: 1.5rem;
+        padding: 0.7rem 2rem;
+        border: none;
+        border-radius: 2rem;
+        background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 2px 8px #a5b4fc;
+        transition: background 0.2s, transform 0.1s;
+      }
+      #restartButton:hover {
+        background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%);
+        transform: translateY(-2px) scale(1.04);
+      }
     </style>
   </head>
   <body>
@@ -106,6 +153,32 @@
         <button id="submitButton" onclick="checkAnswer(6)">金</button>
         <button id="submitButton" onclick="checkAnswer(0)">土</button>
       </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div id="resultScreen">
+      <h2>リザルト</h2>
+      <p id="finalScore"></p>
+      <p id="finalTime"></p>
+      <button
+        id="tweetButton"
+        style="
+          margin-top: 1rem;
+          padding: 0.7rem 2rem;
+          border: none;
+          border-radius: 2rem;
+          background: linear-gradient(90deg, #1da1f2 0%, #6366f1 100%);
+          color: #fff;
+          font-size: 1.1rem;
+          font-weight: bold;
+          cursor: pointer;
+          box-shadow: 0 2px 8px #a5b4fc;
+          transition: background 0.2s, transform 0.1s;
+        "
+        onclick="tweetResult()"
+      >
+        リザルトをツイート
+      </button>
+      <button id="restartButton" onclick="restartGame()">もう一度</button>
     </div>
     <script>
       let scene = 0;
@@ -144,6 +217,7 @@
         scene = 1;
         document.getElementById("submitButton").style.display = "none";
         document.getElementById("gameArea").style.display = "block";
+        document.getElementById("resultScreen").style.display = "none";
         resetStopwatch();
         startStopwatch();
         nextQuestion();
@@ -151,12 +225,7 @@
       function nextQuestion() {
         if (scene > 10) {
           stopStopwatch();
-          alert(
-            `終了！お疲れ様でした！\nスコア: ${score}/10\n経過時間: ${(
-              elapsedTime / 1000
-            ).toFixed(2)}秒`
-          );
-          location.reload();
+          showResult();
           return;
         }
         year = Math.floor(Math.random() * 1000) + 1583;
@@ -175,6 +244,7 @@
         document.getElementById(
           "question"
         ).innerText = `第${scene}問: ${year}年${month}月${day}日は何曜日？`;
+        document.getElementById("feedback").innerText = "";
       }
       function calculateZeller(y, m, d) {
         if (m < 3) {
@@ -194,15 +264,46 @@
       }
       function checkAnswer(selectedDay) {
         const zellerResult = calculateZeller(year, month, day);
+        const daysOfWeek = ["土", "日", "月", "火", "水", "木", "金"];
+        const feedback = document.getElementById("feedback");
         if (zellerResult === selectedDay) {
-          alert("正解！");
+          feedback.innerHTML = '<span style="color:#22c55e;">正解！</span>';
           score++;
         } else {
-          const daysOfWeek = ["土", "日", "月", "火", "水", "木", "金"];
-          alert(`不正解！正解は${daysOfWeek[zellerResult]}曜日でした。`);
+          feedback.innerHTML = `<span style="color:#ef4444;">不正解！</span> 正解は <b>${daysOfWeek[zellerResult]}</b> 曜日でした。`;
         }
-        scene++;
-        nextQuestion();
+        setTimeout(() => {
+          scene++;
+          nextQuestion();
+        }, 900);
+      }
+      function showResult() {
+        document.getElementById("gameArea").style.display = "none";
+        document.getElementById("resultScreen").style.display = "flex";
+        document.getElementById(
+          "finalScore"
+        ).innerText = `スコア: ${score} / 10`;
+        document.getElementById("finalTime").innerText = `経過時間: ${(
+          elapsedTime / 1000
+        ).toFixed(2)} 秒`;
+      }
+      function restartGame() {
+        document.getElementById("resultScreen").style.display = "none";
+        document.getElementById("submitButton").style.display = "inline-block";
+        document.getElementById("stopwatch").style.display = "none";
+        resetStopwatch();
+      }
+      function tweetResult() {
+        const score = document.getElementById("finalScore").innerText;
+        const time = document.getElementById("finalTime").innerText;
+        const text = encodeURIComponent(
+          `ツェラーになろうで遊んだよ！\n${score}\n${time}\n#ツェラーになろう`
+        );
+        const url = encodeURIComponent(location.href);
+        window.open(
+          `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+          "_blank"
+        );
       }
     </script>
   </body>

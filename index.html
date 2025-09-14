@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ツェラーになろう</title>
+    <link rel="icon" href="logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Noto+Sans+JP:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <style>
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: "Noto Sans JP", "Montserrat", sans-serif;
+      }
+      h1 {
+        font-family: "Montserrat", "Noto Sans JP", sans-serif;
+        font-size: 2.8rem;
+        color: #6366f1;
+        margin-bottom: 2rem;
+        letter-spacing: 0.05em;
+        text-shadow: 0 2px 8px #c7d2fe;
+      }
+      #colorInput {
+        padding: 0.8rem 1.2rem;
+        border: none;
+        border-radius: 2rem;
+        font-size: 1.1rem;
+        box-shadow: 0 2px 8px #e0e7ff;
+        outline: none;
+        margin-bottom: 1.2rem;
+        width: 260px;
+        transition: box-shadow 0.2s;
+      }
+      #colorInput:focus {
+        box-shadow: 0 4px 16px #a5b4fc;
+      }
+      #submitButton {
+        padding: 0.8rem 2.2rem;
+        border: none;
+        border-radius: 2rem;
+        background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 2px 8px #a5b4fc;
+        transition: background 0.2s, transform 0.1s;
+      }
+      #submitButton:hover {
+        background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%);
+        transform: translateY(-2px) scale(1.04);
+      }
+      #stopwatch {
+        font-size: 1.2rem;
+        color: #6366f1;
+        margin-bottom: 1rem;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <details>
+      <summary>公式(ほんとに見るのか？？？)</summary>
+      <img src="./公式.png" alt="" width="300" />
+    </details>
+    <h1>ツェラーになろう</h1>
+    <button id="submitButton" onclick="startZeller()">スタート</button>
+    <div
+      id="timer"
+      style="
+        font-size: 1.5rem;
+        color: #6366f1;
+        margin-bottom: 1rem;
+        display: none;
+      "
+    >
+      残り時間: <span id="timeLeft">10</span>秒
+    </div>
+    <div id="stopwatch">経過時間: <span id="elapsed">0.00</span>秒</div>
+    <div style="display: none" id="gameArea">
+      <p id="question" style="text-align: center">問目</p>
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 1rem;
+        "
+      >
+        <button id="submitButton" onclick="checkAnswer(1)">日</button>
+        <button id="submitButton" onclick="checkAnswer(2)">月</button>
+        <button id="submitButton" onclick="checkAnswer(3)">火</button>
+        <button id="submitButton" onclick="checkAnswer(4)">水</button>
+        <button id="submitButton" onclick="checkAnswer(5)">木</button>
+        <button id="submitButton" onclick="checkAnswer(6)">金</button>
+        <button id="submitButton" onclick="checkAnswer(0)">土</button>
+      </div>
+    </div>
+    <script>
+      let scene = 0;
+      let year = -1;
+      let month = -1;
+      let day = -1;
+      let score = 0;
+
+      // ストップウォッチ用
+      let stopwatchInterval = null;
+      let startTime = 0;
+      let elapsedTime = 0;
+
+      function startStopwatch() {
+        document.getElementById("stopwatch").style.display = "block";
+        startTime = Date.now() - elapsedTime;
+        stopwatchInterval = setInterval(() => {
+          elapsedTime = Date.now() - startTime;
+          document.getElementById("elapsed").innerText = (
+            elapsedTime / 1000
+          ).toFixed(2);
+        }, 50);
+      }
+
+      function stopStopwatch() {
+        clearInterval(stopwatchInterval);
+      }
+
+      function resetStopwatch() {
+        elapsedTime = 0;
+        document.getElementById("elapsed").innerText = "0.00";
+      }
+
+      function startZeller() {
+        score = 0;
+        scene = 1;
+        document.getElementById("submitButton").style.display = "none";
+        document.getElementById("gameArea").style.display = "block";
+        resetStopwatch();
+        startStopwatch();
+        nextQuestion();
+      }
+      function nextQuestion() {
+        if (scene > 10) {
+          stopStopwatch();
+          alert(
+            `終了！お疲れ様でした！\nスコア: ${score}/10\n経過時間: ${(
+              elapsedTime / 1000
+            ).toFixed(2)}秒`
+          );
+          location.reload();
+          return;
+        }
+        year = Math.floor(Math.random() * 1000) + 1583;
+        month = Math.floor(Math.random() * 12) + 1;
+        day = Math.floor(Math.random() * 31) + 1;
+        // 月の日数調整
+        if (month === 2) {
+          if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) {
+            day = Math.floor(Math.random() * 29) + 1; // 閏年
+          } else {
+            day = Math.floor(Math.random() * 28) + 1; // 平年
+          }
+        } else if ([4, 6, 9, 11].includes(month)) {
+          day = Math.floor(Math.random() * 30) + 1;
+        }
+        document.getElementById(
+          "question"
+        ).innerText = `第${scene}問: ${year}年${month}月${day}日は何曜日？`;
+      }
+      function calculateZeller(y, m, d) {
+        if (m < 3) {
+          m += 12;
+          y -= 1;
+        }
+        const K = y % 100;
+        const J = Math.floor(y / 100);
+        const f =
+          d +
+          Math.floor((13 * (m + 1)) / 5) +
+          K +
+          Math.floor(K / 4) +
+          Math.floor(J / 4) -
+          2 * J;
+        return ((f % 7) + 7) % 7; // 0=土, 1=日, 2=月, ..., 6=金
+      }
+      function checkAnswer(selectedDay) {
+        const zellerResult = calculateZeller(year, month, day);
+        if (zellerResult === selectedDay) {
+          alert("正解！");
+          score++;
+        } else {
+          const daysOfWeek = ["土", "日", "月", "火", "水", "木", "金"];
+          alert(`不正解！正解は${daysOfWeek[zellerResult]}曜日でした。`);
+        }
+        scene++;
+        nextQuestion();
+      }
+    </script>
+  </body>
+</html>

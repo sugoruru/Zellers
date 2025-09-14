@@ -120,6 +120,13 @@
     <details>
       <summary>公式(ほんとに見るのか？？？)</summary>
       <img src="./公式.png" alt="" width="300" />
+      <ul>
+        <li>Y = 年 (year)</li>
+        <li>M = 月 (month)</li>
+        <li>D = 日 (day)</li>
+        <li>M=1,2のときは"前年の"M=13,14にする</li>
+        <li>h=0のとき(土)、h=6のとき(日)</li>
+      </ul>
     </details>
     <h1>ツェラーになろう</h1>
     <button id="submitButton" onclick="startZeller()">スタート</button>
@@ -145,13 +152,13 @@
           gap: 1rem;
         "
       >
+        <button id="submitButton" onclick="checkAnswer(0)">土</button>
         <button id="submitButton" onclick="checkAnswer(1)">日</button>
         <button id="submitButton" onclick="checkAnswer(2)">月</button>
         <button id="submitButton" onclick="checkAnswer(3)">火</button>
         <button id="submitButton" onclick="checkAnswer(4)">水</button>
         <button id="submitButton" onclick="checkAnswer(5)">木</button>
         <button id="submitButton" onclick="checkAnswer(6)">金</button>
-        <button id="submitButton" onclick="checkAnswer(0)">土</button>
       </div>
       <div class="feedback" id="feedback"></div>
     </div>

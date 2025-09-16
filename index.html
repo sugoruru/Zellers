@@ -45,7 +45,7 @@
       #colorInput:focus {
         box-shadow: 0 4px 16px #a5b4fc;
       }
-      #submitButton {
+      .weekdayButton {
         padding: 0.8rem 2.2rem;
         border: none;
         border-radius: 2rem;
@@ -57,7 +57,7 @@
         box-shadow: 0 2px 8px #a5b4fc;
         transition: background 0.2s, transform 0.1s;
       }
-      #submitButton:hover {
+      .weekdayButton:hover {
         background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%);
         transform: translateY(-2px) scale(1.04);
       }
@@ -125,11 +125,13 @@
         <li>M = 月 (month)</li>
         <li>D = 日 (day)</li>
         <li>M=1,2のときは"前年の"M=13,14にする</li>
-        <li>h=0のとき(土)、h=6のとき(日)</li>
+        <li>h=0のとき(土)、h=6のとき(金)</li>
       </ul>
     </details>
     <h1>ツェラーになろう</h1>
-    <button id="submitButton" onclick="startZeller()">スタート</button>
+    <button class="weekdayButton" id="submitButton" onclick="startZeller()">
+      スタート
+    </button>
     <div
       id="timer"
       style="
@@ -148,17 +150,21 @@
         style="
           display: flex;
           flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: center;
           align-items: center;
           gap: 1rem;
+          max-width: 400px;
+          margin: 0 auto;
         "
       >
-        <button id="submitButton" onclick="checkAnswer(0)">土</button>
-        <button id="submitButton" onclick="checkAnswer(1)">日</button>
-        <button id="submitButton" onclick="checkAnswer(2)">月</button>
-        <button id="submitButton" onclick="checkAnswer(3)">火</button>
-        <button id="submitButton" onclick="checkAnswer(4)">水</button>
-        <button id="submitButton" onclick="checkAnswer(5)">木</button>
-        <button id="submitButton" onclick="checkAnswer(6)">金</button>
+        <button class="weekdayButton" onclick="checkAnswer(0)">土</button>
+        <button class="weekdayButton" onclick="checkAnswer(1)">日</button>
+        <button class="weekdayButton" onclick="checkAnswer(2)">月</button>
+        <button class="weekdayButton" onclick="checkAnswer(3)">火</button>
+        <button class="weekdayButton" onclick="checkAnswer(4)">水</button>
+        <button class="weekdayButton" onclick="checkAnswer(5)">木</button>
+        <button class="weekdayButton" onclick="checkAnswer(6)">金</button>
       </div>
       <div class="feedback" id="feedback"></div>
     </div>

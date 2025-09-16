@@ -11,7 +11,6 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Noto+Sans+JP:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <style>
       body {
         min-height: 100vh;
@@ -45,7 +44,8 @@
       #colorInput:focus {
         box-shadow: 0 4px 16px #a5b4fc;
       }
-      .weekdayButton {
+      .weekdayButton,
+      .quizButton {
         padding: 0.8rem 2.2rem;
         border: none;
         border-radius: 2rem;
@@ -57,17 +57,20 @@
         box-shadow: 0 2px 8px #a5b4fc;
         transition: background 0.2s, transform 0.1s;
       }
-      .weekdayButton:hover {
+      .weekdayButton:hover,
+      .quizButton:hover {
         background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%);
         transform: translateY(-2px) scale(1.04);
       }
-      #stopwatch {
+      #stopwatch,
+      #quizStopwatch {
         font-size: 1.2rem;
         color: #6366f1;
         margin-bottom: 1rem;
         display: none;
       }
-      .feedback {
+      .feedback,
+      .quizFeedback {
         margin: 1.2rem 0 0.5rem 0;
         font-size: 1.3rem;
         font-weight: bold;
@@ -76,7 +79,8 @@
         min-height: 2.2em;
         transition: opacity 0.2s;
       }
-      #resultScreen {
+      #resultScreen,
+      #quizResultScreen {
         display: none;
         flex-direction: column;
         align-items: center;
@@ -88,16 +92,19 @@
         min-width: 320px;
         max-width: 90vw;
       }
-      #resultScreen h2 {
+      #resultScreen h2,
+      #quizResultScreen h2 {
         color: #6366f1;
         font-size: 2rem;
         margin-bottom: 1.2rem;
       }
-      #resultScreen p {
+      #resultScreen p,
+      #quizResultScreen p {
         font-size: 1.2rem;
         margin: 0.5rem 0;
       }
-      #restartButton {
+      #restartButton,
+      #quizRestartButton {
         margin-top: 1.5rem;
         padding: 0.7rem 2rem;
         border: none;
@@ -110,9 +117,13 @@
         box-shadow: 0 2px 8px #a5b4fc;
         transition: background 0.2s, transform 0.1s;
       }
-      #restartButton:hover {
+      #restartButton:hover,
+      #quizRestartButton:hover {
         background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%);
         transform: translateY(-2px) scale(1.04);
+      }
+      #quizArea {
+        display: none;
       }
     </style>
   </head>
@@ -128,20 +139,44 @@
         <li>h=0のとき(土)、h=6のとき(金)</li>
       </ul>
     </details>
+    <details>
+      <summary>⌊26(m+1)/10⌋%7一覧</summary>
+      <ul>
+        <li>m=1 :1</li>
+        <li>m=2 :4</li>
+        <li>m=3 :3</li>
+        <li>m=4 :6</li>
+        <li>m=5 :1</li>
+        <li>m=6 :4</li>
+        <li>m=7 :6</li>
+        <li>m=8 :2</li>
+        <li>m=9 :5</li>
+        <li>m=10:0</li>
+        <li>m=11:3</li>
+        <li>m=12:5</li>
+      </ul>
+    </details>
     <h1>ツェラーになろう</h1>
-    <button class="weekdayButton" id="submitButton" onclick="startZeller()">
-      スタート
-    </button>
     <div
-      id="timer"
+      id="buttonArea"
       style="
-        font-size: 1.5rem;
-        color: #6366f1;
-        margin-bottom: 1rem;
-        display: none;
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
       "
     >
-      残り時間: <span id="timeLeft">10</span>秒
+      <button class="weekdayButton" id="submitButton" onclick="startZeller()">
+        本編スタート
+      </button>
+      <button
+        class="quizButton"
+        id="startQuizButton"
+        onclick="startMonthQuiz()"
+        style="margin-left: 1rem"
+      >
+        月項クイズ
+      </button>
     </div>
     <div id="stopwatch">経過時間: <span id="elapsed">0.00</span>秒</div>
     <div style="display: none" id="gameArea">
@@ -193,7 +228,36 @@
       </button>
       <button id="restartButton" onclick="restartGame()">もう一度</button>
     </div>
+
+    <!-- 月項クイズエリア -->
+    <div id="quizStopwatch">経過時間: <span id="quizElapsed">0.00</span>秒</div>
+    <div id="quizArea">
+      <p id="quizQuestion" style="text-align: center">問目</p>
+      <div
+        style="
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: center;
+          align-items: center;
+          gap: 0.7rem;
+          max-width: 400px;
+          margin: 0 auto;
+        "
+        id="quizChoices"
+      ></div>
+      <div class="quizFeedback" id="quizFeedback"></div>
+    </div>
+    <div id="quizResultScreen">
+      <h2>月項クイズ リザルト</h2>
+      <p id="quizFinalScore"></p>
+      <p id="quizFinalTime"></p>
+      <button id="quizRestartButton" onclick="restartMonthQuiz()">
+        もう一度
+      </button>
+    </div>
     <script>
+      // --- 本編クイズ ---
       let scene = 0;
       let year = -1;
       let month = -1;
@@ -229,8 +293,10 @@
         score = 0;
         scene = 1;
         document.getElementById("submitButton").style.display = "none";
+        document.getElementById("startQuizButton").style.display = "none";
         document.getElementById("gameArea").style.display = "block";
         document.getElementById("resultScreen").style.display = "none";
+        document.getElementById("buttonArea").style.display = "none";
         resetStopwatch();
         startStopwatch();
         nextQuestion();
@@ -303,7 +369,10 @@
       function restartGame() {
         document.getElementById("resultScreen").style.display = "none";
         document.getElementById("submitButton").style.display = "inline-block";
+        document.getElementById("startQuizButton").style.display =
+          "inline-block";
         document.getElementById("stopwatch").style.display = "none";
+        document.getElementById("buttonArea").style.display = "flex";
         resetStopwatch();
       }
       function tweetResult() {
@@ -317,6 +386,125 @@
           `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
           "_blank"
         );
+      }
+
+      // --- 月項クイズ ---
+      let quizScene = 0;
+      let quizScore = 0;
+      let quizMonths = [];
+      let quizCurrentMonth = 1;
+      let quizStopwatchInterval = null;
+      let quizStartTime = 0;
+      let quizElapsedTime = 0;
+
+      function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      function startQuizStopwatch() {
+        document.getElementById("quizStopwatch").style.display = "block";
+        quizStartTime = Date.now() - quizElapsedTime;
+        quizStopwatchInterval = setInterval(() => {
+          quizElapsedTime = Date.now() - quizStartTime;
+          document.getElementById("quizElapsed").innerText = (
+            quizElapsedTime / 1000
+          ).toFixed(2);
+        }, 50);
+      }
+
+      function stopQuizStopwatch() {
+        clearInterval(quizStopwatchInterval);
+      }
+
+      function resetQuizStopwatch() {
+        quizElapsedTime = 0;
+        document.getElementById("quizElapsed").innerText = "0.00";
+      }
+
+      function startMonthQuiz() {
+        quizScore = 0;
+        quizScene = 1;
+        quizMonths = [];
+        for (let i = 0; i < 30; i++) {
+          quizMonths.push(Math.floor(Math.random() * 12) + 1);
+        }
+        document.getElementById("submitButton").style.display = "none";
+        document.getElementById("startQuizButton").style.display = "none";
+        document.getElementById("resultScreen").style.display = "none";
+        document.getElementById("gameArea").style.display = "none";
+        document.getElementById("quizResultScreen").style.display = "none";
+        document.getElementById("quizArea").style.display = "block";
+        document.getElementById("buttonArea").style.display = "none";
+        resetQuizStopwatch();
+        startQuizStopwatch();
+        nextMonthQuiz();
+      }
+
+      function nextMonthQuiz() {
+        if (quizScene > 30) {
+          stopQuizStopwatch();
+          showQuizResult();
+          return;
+        }
+        quizCurrentMonth = quizMonths[quizScene - 1];
+        document.getElementById(
+          "quizQuestion"
+        ).innerText = `第${quizScene}問: m = ${quizCurrentMonth}`;
+        document.getElementById("quizFeedback").innerText = "";
+
+        // 0～6の全てのボタンを表示
+        const correct = Math.floor((26 * (quizCurrentMonth + 1)) / 10) % 7;
+        const choices = [0, 1, 2, 3, 4, 5, 6];
+
+        const quizChoicesDiv = document.getElementById("quizChoices");
+        quizChoicesDiv.innerHTML = "";
+        choices.forEach((num) => {
+          const btn = document.createElement("button");
+          btn.className = "quizButton";
+          btn.innerText = num;
+          btn.onclick = () => checkMonthQuiz(num);
+          quizChoicesDiv.appendChild(btn);
+        });
+      }
+
+      function checkMonthQuiz(selected) {
+        const correct = Math.floor((26 * (quizCurrentMonth + 1)) / 10) % 7;
+        const feedback = document.getElementById("quizFeedback");
+        if (selected === correct) {
+          feedback.innerHTML = '<span style="color:#22c55e;">正解！</span>';
+          quizScore++;
+        } else {
+          feedback.innerHTML = `<span style="color:#ef4444;">不正解！</span> 正解は <b>${correct}</b> です。`;
+        }
+        setTimeout(() => {
+          quizScene++;
+          nextMonthQuiz();
+        }, 900);
+      }
+
+      function showQuizResult() {
+        document.getElementById("quizArea").style.display = "none";
+        document.getElementById("quizResultScreen").style.display = "flex";
+        document.getElementById(
+          "quizFinalScore"
+        ).innerText = `スコア: ${quizScore} / 30`;
+        document.getElementById("quizFinalTime").innerText = `経過時間: ${(
+          quizElapsedTime / 1000
+        ).toFixed(2)} 秒`;
+      }
+
+      function restartMonthQuiz() {
+        document.getElementById("quizResultScreen").style.display = "none";
+        document.getElementById("submitButton").style.display = "inline-block";
+        document.getElementById("startQuizButton").style.display =
+          "inline-block";
+        document.getElementById("quizStopwatch").style.display = "none";
+        document.getElementById("buttonArea").style.display = "flex";
+        resetQuizStopwatch();
       }
     </script>
   </body>
